@@ -1,21 +1,27 @@
 import { PrismaClient } from "@prisma/client";
 import { Truck, Activity, AlertTriangle, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import AssignDriverButton from "@/components/dispatcher/AssignDriverButton";
 
 const prisma = new PrismaClient();
 
 export const dynamic = 'force-dynamic';
 
 export default async function DispatcherDashboard() {
-  const [vehicles, activeShipments, idleDrivers] = await Promise.all([
+  const [vehicles, activeShipments, availableDrivers] = await Promise.all([
     prisma.vehicle.findMany(),
     prisma.shipment.findMany({
       where: { status: { in: ['CREATED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'] } },
       orderBy: { createdAt: "desc" },
       take: 8
     }),
-    prisma.driver.count({ where: { availability: true } })
+    prisma.driver.findMany({ 
+      where: { availability: true },
+      include: { user: true }
+    })
   ]);
+
+  const idleDrivers = availableDrivers.length;
 
   const onTrip = vehicles.filter(v => v.status === 'ON_TRIP').length;
   const maintenance = vehicles.filter(v => v.status === 'MAINTENANCE').length;
@@ -77,9 +83,11 @@ export default async function DispatcherDashboard() {
                     </div>
                   </div>
                 </div>
-                <button className="px-6 py-3 w-full sm:w-auto rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition shadow-lg shadow-black/10">
-                  Assign Driver
-                </button>
+                <AssignDriverButton 
+                  shipmentId={ship.id} 
+                  trackingNo={ship.trackingNo} 
+                  availableDrivers={availableDrivers} 
+                />
               </div>
             ))}
             {activeShipments.filter(s => !s.driverId).length === 0 && (
