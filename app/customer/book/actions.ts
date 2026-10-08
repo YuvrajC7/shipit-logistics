@@ -1,6 +1,6 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, ShipmentStatus } from "@prisma/client";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -38,9 +38,9 @@ export async function bookShipment(formData: FormData) {
   const availableVehicle = await prisma.vehicle.findFirst({ where: { status: 'AVAILABLE' } });
 
   const isAutoDispatched = availableDriver && availableVehicle;
-  const finalStatus = isAutoDispatched ? "IN_TRANSIT" : "CREATED";
+  const finalStatus: ShipmentStatus = isAutoDispatched ? "IN_TRANSIT" : "CREATED";
 
-  const trackingEventsData = [
+  const trackingEventsData: { note: string; location: string; status: ShipmentStatus }[] = [
     { note: "Shipment details received and label generated.", location: originCity, status: "CREATED" }
   ];
 
