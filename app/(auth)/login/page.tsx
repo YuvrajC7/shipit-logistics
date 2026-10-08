@@ -45,8 +45,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6 relative overflow-hidden">
       {/* Full-screen Loading Overlay */}
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-md transition-all">
-          <Loader2 className="w-16 h-16 animate-spin text-[#C70E20]" strokeWidth={1.5} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[2px] transition-all">
+          <Loader2 className="w-16 h-16 animate-spin text-[#C70E20]" strokeWidth={2} />
         </div>
       )}
 
