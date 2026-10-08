@@ -1,0 +1,150 @@
+// This is your Prisma schema file for SwiftFreight v2
+// 5 clean tables: User, Driver, Vehicle, Shipment, TrackingEvent
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  DISPATCHER
+  DRIVER
+  CUSTOMER
+}
+
+enum ShipmentStatus {
+  CREATED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum ServiceType {
+  STANDARD
+  EXPRESS
+  SAME_DAY
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  ON_TRIP
+  MAINTENANCE
+}
+
+// ─────────────────────────────────────────────
+// TABLE 1: users
+// Mirrors Supabase auth.users — all roles in one table
+// ─────────────────────────────────────────────
+model User {
+  id        String   @id @db.Uuid // matches auth.users.id
+  email     String   @unique
+  fullName  String
+  phone     String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  driver    Driver?
+  shipments Shipment[] @relation("SenderShipments")
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// TABLE 2: drivers
+// Subtype of User — class table inheritance
+// ─────────────────────────────────────────────
+model Driver {
+  id           String  @id @db.Uuid
+  licenseNo    String  @unique
+  availability Boolean @default(true)
+  rating       Decimal @default(5.0) @db.Decimal(3, 2)
+  totalTrips   Int     @default(0)
+
+  user      User       @relation(fields: [id], references: [id], onDelete: Cascade)
+  shipments Shipment[]
+
+  @@map("drivers")
+}
+
+// ─────────────────────────────────────────────
+// TABLE 3: vehicles
+// Independent fleet entity
+// ─────────────────────────────────────────────
+model Vehicle {
+  id         String        @id @default(uuid()) @db.Uuid
+  plateNo    String        @unique
+  type       String        // "Bike", "Van", "Truck", "Mini-Truck"
+  capacityKg Decimal       @db.Decimal(10, 2)
+  status     VehicleStatus @default(AVAILABLE)
+  createdAt  DateTime      @default(now())
+
+  shipments Shipment[]
+
+  @@map("vehicles")
+}
+
+// ─────────────────────────────────────────────
+// TABLE 4: shipments
+// Core business entity — one row per parcel
+// ─────────────────────────────────────────────
+model Shipment {
+  id            String         @id @default(uuid()) @db.Uuid
+  trackingNo    String         @unique
+  senderId      String         @db.Uuid
+  driverId      String?        @db.Uuid
+  vehicleId     String?        @db.Uuid
+  originCity    String
+  destCity      String
+  receiverName  String
+  receiverPhone String
+  status        ShipmentStatus @default(CREATED)
+  serviceType   ServiceType    @default(STANDARD)
+  weightKg      Decimal        @db.Decimal(10, 2)
+  charge        Decimal?       @db.Decimal(12, 2)
+  eta           DateTime?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  sender         User            @relation("SenderShipments", fields: [senderId], references: [id])
+  driver         Driver?         @relation(fields: [driverId], references: [id])
+  vehicle        Vehicle?        @relation(fields: [vehicleId], references: [id])
+  trackingEvents TrackingEvent[]
+
+  @@index([senderId])
+  @@index([driverId])
+  @@index([trackingNo])
+  @@map("shipments")
+}
+
+// ─────────────────────────────────────────────
+// TABLE 5: tracking_events
+// Immutable append-only log — auto-created by trigger
+// ─────────────────────────────────────────────
+model TrackingEvent {
+  id         String         @id @default(uuid()) @db.Uuid
+  shipmentId String         @db.Uuid
+  status     ShipmentStatus
+  location   String?
+  note       String?
+  createdAt  DateTime       @default(now())
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id])
+
+  @@index([shipmentId])
+  @@map("tracking_events")
+}
