@@ -30,7 +30,6 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Failed to sign in");
-    } finally {
       setLoading(false);
     }
   };
