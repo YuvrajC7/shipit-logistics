@@ -106,7 +106,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-black hover:bg-zinc-800 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2 mt-8 disabled:opacity-50 shadow-lg shadow-black/10 text-lg"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign In"}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin text-[#C70E20]" /> : "Sign In"}
               {!loading && <ArrowRight className="w-5 h-5" />}
             </button>
           </form>
