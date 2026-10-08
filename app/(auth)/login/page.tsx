@@ -44,6 +44,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Full-screen Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-md transition-all">
+          <Loader2 className="w-16 h-16 animate-spin text-[#C70E20]" strokeWidth={1.5} />
+        </div>
+      )}
+
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#C70E20]/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
       
       <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-zinc-500 hover:text-black transition-colors font-medium text-sm bg-white border border-black/5 px-4 py-2 rounded-full shadow-sm z-20">
@@ -106,7 +113,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-black hover:bg-zinc-800 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2 mt-8 disabled:opacity-50 shadow-lg shadow-black/10 text-lg"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin text-[#C70E20]" /> : "Sign In"}
+              {loading ? "Signing In..." : "Sign In"}
               {!loading && <ArrowRight className="w-5 h-5" />}
             </button>
           </form>
